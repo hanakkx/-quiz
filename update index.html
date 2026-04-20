@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>你是拉椅子里的谁？</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            min-height: 100vh;
+            color: #000;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: #fff;
+            border: 2px solid #000;
+            border-radius: 20px;
+            padding: 30px 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #000;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #000;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .question {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .option {
+            padding: 16px 20px;
+            background: #fff;
+            border: 2px solid #000;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .option:hover {
+            background: #f0f0f0;
+        }
+
+        .option.selected {
+            background: #000;
+            color: #fff;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: bold;
+            border: 2px solid #000;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            background: #fff;
+            color: #000;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #f0f0f0;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-prev {
+            background: #e0e0e0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e0e0e0;
+            border-top-color: #000;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        .loading-text {
+            font-size: 16px;
+        }
+
+        .result {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .result-title {
+            font-size: 20px;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .result-emoji {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .btn-restart {
+            margin-top: 30px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            h1 {
+                font-size: 18px;
+                margin-bottom: 25px;
+            }
+
+            .question {
+                font-size: 17px;
+                margin-bottom: 25px;
+            }
+
+            .option {
+                padding: 14px 16px;
+                font-size: 14px;
+            }
+
+            .btn {
+                padding: 14px;
+                font-size: 16px;
+            }
+
+            .result-title {
+                font-size: 18px;
+            }
+
+            .result-emoji {
+                font-size: 50px;
+            }
+
+            .result-image {
+                margin-top: 20px;
+                max-width: 100%;
+                height: auto;
+            }
+
+            .result-image img {
+                max-width: 300px;
+                height: auto;
+                display: block;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>你是拉椅子里的谁？</h1>
+
+        <div id="quiz">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <div class="question" id="question"></div>
+            <div class="options" id="options"></div>
+
+            <div class="btn-group">
+                <button class="btn btn-prev" id="prevBtn">上一题</button>
+                <button class="btn" id="nextBtn" disabled>下一题</button>
+            </div>
+        </div>
+
+        <div class="loading hidden" id="loading">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">结果生成中…请稍候</div>
+        </div>
+
+        <div class="result hidden" id="result">
+            <div class="result-emoji">✨</div>
+            <div class="result-title" id="resultTitle"></div>
+            <div class="result-image" id="resultImage"></div>
+            <button class="btn btn-restart" id="restartBtn">再测一次</button>
+        </div>
+    </div>
+    <script>
+        // 题目数据 - 13道题
+        var questionsData = [
+            {
+                question: "结束了一天忙碌的工作，你饿得能一口吃掉十头牛，你将怎样选择？",
+                options: [
+                    "A：飞奔到餐厅把菜单上想点的全点一遍焦急等待大快朵颐，yummyyummy，左手一只鸡右手一只鸭。",
+                    "B：等大家一起吃，先喝点儿液体，饿着肚子也要保持优雅。",
+                    "C：不饿。减肥。",
+                    "D：先等别人点菜，坐着安心等待，笑眯眯和大家先聊会儿，不着急不着急反正早晚也会有食物飞进嘴中。",
+                    "E：神游中。一会回家该干点什么呢？打游戏还是看电视？好像有点儿困了。要不现在睡会儿吧？养精蓄锐一会回去玩。",
+                    "F：菜快来啊！饿饿饿！来菜！来！来菜！来！"
+                ]
+            },
+            {
+                question: "选一首歌代表你自己：",
+                options: [
+                    "A：Get a guitar—RIIZE 蹦布咚蹦蹦贝斯🎸",
+                    "B：360—Charli xcx",
+                    "C：Paris in the Rain—Lauv",
+                    "D：Dilemma—Nelly,Kelly Rowland",
+                    "E：Confident—Justin Bieber",
+                    "F：Style—Taylor Swift"
+                ]
+            },
+            {
+                question: "出门旅行必备：",
+                options: [
+                    "A：大大大大大大包，大到能把冰箱装进去，然后也能把大象装冰箱里。",
+                    "B：自己。",
+                    "C：一片赤诚的心！",
+                    "D：帽子🧢",
+                    "E：神秘黑背心",
+                    "F：你猜？"
+                ]
+            },
+            {
+                question: "选择一个你最最最最最喜欢的颜色：",
+                options: [
+                    "A：红",
+                    "B：黑",
+                    "C：白",
+                    "D：蓝",
+                    "E：灰",
+                    "F：银"
+                ]
+            },
+            {
+                question: "如果用一种自然元素来形容你，你会选择？",
+                options: [
+                    "A：火🔥—热情奔放、充满活力",
+                    "B：水💧—温柔包容、适应力强",
+                    "C：风🌪️—自由不羁、追求理想",
+                    "D：土🌍—稳重踏实、值得依靠",
+                    "E：光✨—温暖治愈、照亮他人",
+                    "F：冰❄️—冷静理智、坚韧不拔"
+                ]
+            },
+            {
+                question: "放假了你最想做？",
+                options: [
+                    "A：工作！工作就是我的最爱！",
+                    "B：追剧！一整天都沉浸在剧里。",
+                    "C：运动！健身使我快乐！",
+                    "D：睡觉！我要睡到天昏地暗！",
+                    "E：学习！我要充实自己！",
+                    "F：和朋友聚会！热闹才是王道！"
+                ]
+            },
+            {
+                question: "遇到不会做的事情，你会？",
+                options: [
+                    "A：自己研究！不懂就查资料！",
+                    "B：请教前辈！学习经验最重要！",
+                    "C：找朋友帮忙！大家一起解决！",
+                    "D：先试一试！失败了再找原因！",
+                    "E：暂时放下，过几天再想！",
+                    "F：找人教我！从头学起！"
+                ]
+            },
+            {
+                question: "你更倾向？",
+                options: [
+                    "A：逻辑理性，注重事实",
+                    "B：感性直觉，注重感受",
+                    "C：团队合作，协调沟通",
+                    "D：独立自主，自力更生",
+                    "E：创新突破，不拘一格",
+                    "F：稳健保守，按部就班"
+                ]
+            },
+            {
+                question: "你的理想生活是？",
+                options: [
+                    "A：忙碌充实，充满挑战",
+                    "B：悠闲自在，享受当下",
+                    "C：有目标有意义，不断成长",
+                    "D：平凡安稳，岁月静好",
+                    "E：精彩刺激，不断探索",
+                    "F：简单规律，内心平静"
+                ]
+            },
+            {
+                question: "面对压力你会？",
+                options: [
+                    "A：积极应对，把压力化为动力",
+                    "B：寻求支持，找人倾诉释放",
+                    "C：自我调节，运动放松缓解",
+                    "D：暂时逃避，等状态好转",
+                    "E：分析原因，找到解决方案",
+                    "F：保持平静，相信自己能搞定"
+                ]
+            },
+            {
+                question: "如果闯入你的梦境，你会？",
+                options: [
+                    "A：和梦里的角色互动！",
+                    "B：探索梦境世界，发现奥秘！",
+                    "C：记录梦境，分析潜意识！",
+                    "D：在梦里实现现实中的愿望！",
+                    "E：把梦境变成现实！",
+                    "F：享受梦境，不想醒来！"
+                ]
+            },
+            {
+                question: "你最爱吃的水果是？",
+                options: [
+                    "A：草莓🍓—甜美可爱",
+                    "B：西瓜🍉—清爽解渴",
+                    "C：葡萄🍇—精致小巧",
+                    "D：苹果🍎—健康经典",
+                    "E：芒果🥭—热带风情",
+                    "F：橙子🍊—活力满满"
+                ]
+            },
+            {
+                question: "你最欣赏的性格特点？",
+                options: [
+                    "A：稳重",
+                    "B：温柔",
+                    "C：幽默",
+                    "D：机智",
+                    "E：有好多的爱",
+                    "F：才华横溢"
+                ]
+            }
+        ];
+        // 结果数据 - 22种角色
+        var resultsData = [
+            { name: "Shotaro", type: "main", weight: 2.0, image: "Shotaro.jpg", description: "低多边形风格3D插画，浅米色短发，戴着黑色细框墨镜，穿水洗蓝色牛仔夹克配浅卡其色内搭，嘴角微微上扬带着温和的笑容，整体姿态放松随性。" },
+            { name: "Eunseok", type: "main", weight: 2.0, image: "Eunseok.jpg", description: "低多边形风格插画，深棕色短发，刘海自然垂落，穿黑白拼色立领运动夹克，内搭黑色网眼上衣，嘴角微微上扬，干净清爽又充满现代感。" },
+            { name: "Sungchan", type: "main", weight: 2.0, image: "Sungchan.jpg", description: "低多边形风格插画，深棕色短发，神态自信沉稳，内搭黑色圆领打底衫，外穿深棕色翻领拉链夹克，双臂交叉抱胸，姿态放松从容。" },
+            { name: "Wonbin", type: "main", weight: 2.0, image: "Wonbin.jpg", description: "低多边形风格插画，浅粉色短发，黑色仿皮草外套，内搭黑色V领紧身T恤，叠戴三条项链（其中一条挂墨镜），亮面黑色皮裤，双手插裤兜，姿态随性酷感。" },
+            { name: "Sohee", type: "main", weight: 2.0, image: "Sohee.jpg", description: "低多边形风格3D插画，浅棕色短发，戴黑色细框圆形眼镜，浅灰色连帽拉链卫衣（胸前有粉色植物图案），袖口有粉色装饰，黑色长裤（裤腿有三条白色竖条纹），双手插兜，姿态放松。" },
+            { name: "Anton", type: "main", weight: 2.0, image: "Anton.jpg", description: "低多边形风格插画，深棕色短碎发，脸型瘦长，黑色V领上衣（领口有浅灰色包边），神态亲切阳光，嘴角带着温和的浅笑。" },
+            { name: "菠萝头", type: "secondary", weight: 2.0, image: "菠萝头.jpg", description: "低多边形风格拟人形象，头部是暖黄色多边形菠萝，顶部有深绿色冠芽，草绿色圆领上衣，充满创意与几何美感。" },
+            { name: "Cody", type: "secondary", weight: 2.0, image: "Cody.jpg", description: "低多边形风格多臂男性形象，深棕色短发，面部是黑色大问号，白色内搭深灰色无袖工装围裙，手持美发美妆工具（梳子、剪刀、吹风、喷壶、化妆刷等），呈现'千手'视觉效果，隐喻服务行业从业者的忙碌与困惑。" },
+            { name: "五中心", type: "secondary", weight: 2.0, image: "五中心.jpg", description: "低多边形风格3D作品，头部是黑色数字5，下方是白色的低多边形颈部和肩部结构，黑白对比鲜明，造型简洁现代。" },
+            { name: "布栗子", type: "secondary", weight: 2.0, image: "布栗子.jpg", description: "低多边形风格3D应援棒，顶部是透明多面体球体，内部有板栗造型和白色五角星，白色笔直手柄，黑色圆形按钮，造型简洁充满设计感。" },
+            { name: "Shotaro的神秘大背包", type: "rare", weight: 2.0, image: "Shotaro背包.jpg", description: "低多边形风格3D插画，浅棕色短发戴深蓝色鸭舌帽，浅灰色翻领外套，浅蓝色阔腿牛仔裤，左臂伸出竖大拇指，右肩背着黑色双肩背包，姿态轻松友好。" },
+            { name: "Anton的神秘大背包", type: "rare", weight: 2.0, image: "Anton背包.jpg", description: "低多边形风格3D渲染，深灰色针织冷帽配头戴式耳机，细框透明眼镜，白色立体口罩，白色圆领打底衫配深灰色开衫外套，双手扶着棕褐色手提包，包右侧挂着银色链条猴子挂饰（穿西装打领带）。" },
+            { name: "Sohee的神奇棒球帽", type: "rare", weight: 2.0, image: "Sohee帽子.jpg", description: "低多边形风格3D插画，浅米色面部，红色圆领上衣，头顶从下往上依次堆叠五顶棒球帽（卡其绿、深墨绿、深紫、暖橙、白蓝拼色），堆叠高度与头部高度相当。" },
+            { name: "Eunseok的神秘针织帽", type: "rare", weight: 2.0, image: "Eunseok帽子.jpg", description: "低多边形风格插画，深棕色短发戴黑色针织冷帽，浅灰蓝色立领运动夹克（有白色条纹），黑色长裤，双手插兜，姿态放松随性。" },
+            { name: "Wonbin的神秘黑背心", type: "rare", weight: 2.0, image: "Wonbin背心.jpg", description: "低多边形风格3D肖像，深黑色短发，纯黑色棉质工字背心，两条叠戴项链（黑色绳带+银色方吊坠，银色金属链+五角星吊坠），双臂自然下垂，肌肉线条清晰。" },
+            { name: "Sungchan的神秘白背心", type: "rare", weight: 2.0, image: "Sungchan背心.jpg", description: "低多边形风格3D插画，深棕色短款发型，白色棉质工字背心，双臂弯曲抬起握拳在肩膀附近，肩部手臂肌肉线条硬朗，展现健硕的上肢力量。" },
+            { name: "神秘佛祖（Anton捏的蓝色佛祖橡皮泥）", type: "super-rare", weight: 2.0, image: "神秘佛祖.jpg", description: "低多边形风格3D雕塑，薄荷蓝哑光质感，类人形态，尖顶多边形头部，温和憨厚的神态，盘坐姿态，左手手掌朝前，右手放在膝盖上。" },
+            { name: "黑影大人（Eunseok分身)", type: "super-rare", weight: 2.0, image: "黑影大人.jpg", description: "低多边形风格3D插画，浅金色短发，纯黑色圆领短袖T恤，左手举在头顶上方手指张开，右手自然下垂，神态沉静内敛。" },
+            { name: "Justin Bieber（Jimmy Lee=Sohee版)", type: "super-rare", weight: 2.0, image: "JustinBieber.jpg", description: "低多边形风格3D插画，浅棕色短发，红黑菱形格纹V领针织衫，白色圆领内搭，黑色细绳项链配银色军牌吊坠，双手在胸前比出心形手势，神态轻松愉悦。" },
+            { name: "椅戴珊（Shotaro 突出了身材很好版)", type: "super-rare", weight: 2.0, image: "椅戴珊.jpg", description: "低多边形风格3D插画，浅棕色短发反戴深蓝色棒球帽，体型匀称健壮，浅灰色翻领休闲夹克，浅蓝色宽松牛仔裤，右手竖大拇指，左腿弯曲抬起，姿态随性充满活力。" },
+            { name: "彬彬姐（美男芭比Wonbin版)", type: "super-rare", weight: 2.0, image: "彬彬姐.jpg", description: "低多边形风格3D肖像，浅米色短发戴浅粉色贝雷帽，棱角分明的多边形面部轮廓，米白色圆领上衣，深棕色细长眼睛，沉稳内敛的神态。" },
+            { name: "神秘白巧男子（Sungchan八块腹肌强壮版)", type: "super-rare", weight: 2.0, image: "神秘白巧男子.jpg", description: "低多边形风格3D插画，浅棕色短发，赤裸上身展现紧实健硕的肌肉线条（胸肌、腹肌、肩部三角肌、手臂肱二头肌），双臂弯曲握拳在肩部，肌肉完全收紧隆起，展示力量姿态。" }
+        ];
+        var currentQuestion = 0;
+        var answers = [];
+        var selectedOption = null;
+
+        var quizEl = document.getElementById('quiz');
+        var loadingEl = document.getElementById('loading');
+        var resultEl = document.getElementById('result');
+        var questionEl = document.getElementById('question');
+        var optionsEl = document.getElementById('options');
+        var nextBtn = document.getElementById('nextBtn');
+        var prevBtn = document.getElementById('prevBtn');
+        var restartBtn = document.getElementById('restartBtn');
+        var progressFill = document.getElementById('progressFill');
+        var resultTitle = document.getElementById('resultTitle');
+        var resultImage = document.getElementById('resultImage');
+
+        function init() {
+            currentQuestion = 0;
+            answers = [];
+            selectedOption = null;
+            showQuestion();
+        }
+
+        function showQuestion() {
+            var q = questionsData[currentQuestion];
+            questionEl.textContent = q.question;
+            optionsEl.innerHTML = '';
+            selectedOption = null;
+            nextBtn.disabled = true;
+
+            q.options.forEach(function(option, index) {
+                var div = document.createElement('div');
+                div.className = 'option';
+                div.textContent = option;
+                div.onclick = function() {
+                    selectOption(index, div);
+                };
+                optionsEl.appendChild(div);
+            });
+
+            var progress = ((currentQuestion + 1) / questionsData.length) * 100;
+            progressFill.style.width = progress + '%';
+
+            prevBtn.disabled = currentQuestion === 0;
+            
+            if (currentQuestion === questionsData.length - 1) {
+                nextBtn.textContent = '查看结果';
+            } else {
+                nextBtn.textContent = '下一题';
+            }
+        }
+
+        function selectOption(index, element) {
+            var allOptions = document.querySelectorAll('.option');
+            allOptions.forEach(function(opt) {
+                opt.classList.remove('selected');
+            });
+            
+            element.classList.add('selected');
+            selectedOption = index;
+            nextBtn.disabled = false;
+        }
+
+        prevBtn.onclick = function() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                
+                if (answers.length > currentQuestion) {
+                    selectedOption = answers[currentQuestion];
+                }
+                showQuestion();
+                
+                if (selectedOption !== null) {
+                    var allOptions = document.querySelectorAll('.option');
+                    if (allOptions[selectedOption]) {
+                        allOptions[selectedOption].classList.add('selected');
+                        nextBtn.disabled = false;
+                    }
+                }
+            }
+        };
+
+        nextBtn.onclick = function() {
+            if (selectedOption === null) return;
+
+            answers[currentQuestion] = selectedOption;
+
+            if (currentQuestion < questionsData.length - 1) {
+                currentQuestion++;
+                showQuestion();
+            } else {
+                showLoading();
+            }
+        };
+
+        function showLoading() {
+            quizEl.classList.add('hidden');
+            loadingEl.classList.remove('hidden');
+            resultEl.classList.add('hidden');
+
+            setTimeout(function() {
+                showResult();
+            }, 1800);
+        }
+
+        function showResult() {
+            loadingEl.classList.add('hidden');
+            resultEl.classList.remove('hidden');
+
+            var scores = new Array(resultsData.length).fill(0);
+
+            var mainMatchCount = {
+                0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0
+            };
+
+            answers.forEach(function(answerIndex, questionIndex) {
+                for (var i = 0; i < resultsData.length; i++) {
+                    var weight = calculateWeight(answerIndex, questionIndex, i);
+                    scores[i] += weight;
+                    
+                    if (i >= 0 && i <= 5 && weight > 1) {
+                        mainMatchCount[i]++;
+                    }
+                }
+            });
+
+            var superRareBonus = {};
+            if (mainMatchCount[0] >= 7) superRareBonus[0] = 19;
+            if (mainMatchCount[1] >= 7) superRareBonus[1] = 17;
+            if (mainMatchCount[2] >= 7) superRareBonus[2] = 21;
+            if (mainMatchCount[3] >= 7) superRareBonus[3] = 20;
+            if (mainMatchCount[4] >= 7) superRareBonus[4] = 18;
+            if (mainMatchCount[5] >= 7) superRareBonus[5] = 16;
+
+            for (var mainIdx in superRareBonus) {
+                var superRareIdx = superRareBonus[mainIdx];
+                scores[superRareIdx] += 20.0;
+            }
+
+            var maxMatchCount = 0;
+            var maxMatchIndex = -1;
+            for (var i = 0; i < 6; i++) {
+                if (mainMatchCount[i] > maxMatchCount) {
+                    maxMatchCount = mainMatchCount[i];
+                    maxMatchIndex = i;
+                }
+            }
+
+            var avatarResultIndex = -1;
+            if (Object.keys(superRareBonus).length === 0 && maxMatchCount >= 4) {
+                var topMatchIndices = [];
+                for (var i = 0; i < 6; i++) {
+                    if (mainMatchCount[i] === maxMatchCount) {
+                        topMatchIndices.push(i);
+                    }
+                }
+                
+                var topMainIndex = topMatchIndices[Math.floor(Math.random() * topMatchIndices.length)];
+
+                var avatarMap = {
+                    '0': 10,
+                    '5': 11,
+                    '4': 12,
+                    '1': 13,
+                    '3': 14,
+                    '2': 15
+                };
+                avatarResultIndex = avatarMap[topMainIndex.toString()];
+            }
+
+            if (avatarResultIndex !== -1) {
+                scores[avatarResultIndex] += 10.0;
+            }
+
+            var maxScore = Math.max.apply(Math, scores);
+            var resultIndices = [];
+            for (var i = 0; i < scores.length; i++) {
+                if (scores[i] === maxScore) {
+                    resultIndices.push(i);
+                }
+            }
+            
+            if (Object.keys(superRareBonus).length > 0) {
+                var bestMainIndex = null;
+                var bestMatchCount = 0;
+                
+                for (var mainIdx in superRareBonus) {
+                    var matchCount = mainMatchCount[mainIdx];
+                    if (matchCount > bestMatchCount) {
+                        bestMatchCount = matchCount;
+                        bestMainIndex = parseInt(mainIdx);
+                    }
+                }
+                
+                var bestSuperRareIndex = superRareBonus[bestMainIndex];
+                var resultData = resultsData[bestSuperRareIndex];
+                resultTitle.textContent = '你是拉椅子里的 ' + resultData.name;
+                resultImage.innerHTML = '<img src="' + resultData.image + '" alt="' + resultData.name + '">';
+                return;
+            }
+            
+            if (avatarResultIndex !== -1) {
+                var resultData = resultsData[avatarResultIndex];
+                resultTitle.textContent = '你是拉椅子里的 ' + resultData.name;
+                resultImage.innerHTML = '<img src="' + resultData.image + '" alt="' + resultData.name + '">';
+                return;
+            }
+            
+            var maxScore = Math.max.apply(Math, scores);
+            var resultIndices = [];
+            for (var i = 0; i < scores.length; i++) {
+                if (scores[i] === maxScore) {
+                    resultIndices.push(i);
+                }
+            }
+            
+            if (resultIndices.length > 1) {
+                var secondaryResults = resultIndices.filter(function(idx) {
+                    return resultsData[idx].type === 'secondary';
+                });
+                if (secondaryResults.length > 0) {
+                    resultIndices = secondaryResults;
+                }
+            }
+            
+            var randomResultIndex = resultIndices[Math.floor(Math.random() * resultIndices.length)];
+            var resultData = resultsData[randomResultIndex];
+            resultTitle.textContent = '你是拉椅子里的 ' + resultData.name;
+            resultImage.innerHTML = '<img src="' + resultData.image + '" alt="' + resultData.name + '">';
+        }
+
+        function calculateWeight(answerIndex, questionIndex, resultIndex) {
+            var baseWeight = resultsData[resultIndex].weight;
+            
+            var questionPreference = {
+                0: {
+                    A: [0],
+                    B: [5],
+                    C: [3, 9],
+                    D: [0, 6, 7, 8],
+                    E: [1, 9],
+                    F: [4, 9]
+                },
+                1: {
+                    A: [9, 1, 6, 7, 8],
+                    B: [5],
+                    C: [2],
+                    D: [0],
+                    E: [4],
+                    F: [3]
+                },
+                2: {
+                    A: [5, 0, 7, 10, 11],
+                    B: [1, 6],
+                    C: [9],
+                    D: [4, 12, 13],
+                    E: [3, 2, 14, 15],
+                    F: [5, 9, 6, 7, 8]
+                },
+                3: {
+                    A: [4],
+                    B: [1],
+                    C: [9, 6, 7, 8],
+                    D: [0, 2],
+                    E: [5],
+                    F: [3]
+                },
+                4: {
+                    A: [3],
+                    B: [1],
+                    C: [5],
+                    D: [0, 2],
+                    E: [4, 9],
+                    F: [6, 7, 8]
+                },
+                5: {
+                    A: [6, 7, 8],
+                    B: [1],
+                    C: [2, 5],
+                    D: [4],
+                    E: [3],
+                    F: [0, 9]
+                },
+                6: {
+                    A: [3],
+                    B: [1, 0],
+                    C: [5],
+                    D: [4],
+                    E: [6, 7, 8],
+                    F: [9, 2]
+                },
+                7: {
+                    A: [3, 9],
+                    B: [1, 5],
+                    C: [8, 7],
+                    D: [0, 2],
+                    E: [4],
+                    F: [6]
+                },
+                8: {
+                    A: [0],
+                    B: [5, 4, 1],
+                    C: [9],
+                    D: [2, 3],
+                    E: [6, 7, 8]
+                },
+                9: {
+                    A: [0, 6, 7, 8],
+                    B: [1, 5],
+                    C: [2, 3],
+                    D: [4],
+                    E: [9]
+                },
+                10: {
+                    A: [9, 0],
+                    B: [4],
+                    C: [5],
+                    D: [3],
+                    E: [1],
+                    F: [2]
+                },
+                11: {
+                    A: [0],
+                    B: [3, 2],
+                    C: [4, 5],
+                    D: [6],
+                    E: [7],
+                    F: [1, 8, 9]
+                },
+                12: {
+                    A: [6],
+                    B: [7],
+                    C: [5, 4, 1],
+                    D: [0, 3, 2],
+                    E: [9],
+                    F: [8]
+                }
+            };
+
+            var options = ['A', 'B', 'C', 'D', 'E', 'F'];
+            var selectedOptionValue = options[answerIndex];
+            var preferences = questionPreference[questionIndex];
+
+            if (preferences && preferences[selectedOptionValue]) {
+                var preferredResults = preferences[selectedOptionValue];
+                if (preferredResults.indexOf(resultIndex) !== -1) {
+                    return baseWeight * 2.5;
+                }
+            }
+
+            return baseWeight * 0.3;
+        }
+
+        restartBtn.onclick = function() {
+            resultEl.classList.add('hidden');
+            quizEl.classList.remove('hidden');
+            init();
+        };
+
+        init();
+    </script>
+</body>
+</html>
